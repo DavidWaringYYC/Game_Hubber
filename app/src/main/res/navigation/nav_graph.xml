@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/gameHubFragment">
+    <action android:id="@+id/action_global_to_settingsFragment" app:destination="@+id/settingsFragment"/>
+    <fragment
+        android:id="@+id/gameHubFragment"
+        android:name="com.squirrelreserve.gamehubber.GameHubFragment"
+        android:label="Game Hub">
+
+        <action android:id="@+id/action_gameHub_to_settings" app:destination="@+id/settingsFragment"/>
+        <action android:id="@+id/action_gameHub_to_memoryMatch" app:destination="@+id/memoryMatchFragment"/>
+        <action android:id="@+id/action_gameHub_to_wordSearch" app:destination="@+id/wordSearchFragment"/>
+    </fragment>
+    <fragment android:id="@+id/settingsFragment" android:name="com.squirrelreserve.gamehubber.SettingsFragment" android:label="Settings"/>
+    <fragment android:id="@+id/memoryMatchFragment"
+        android:name="com.squirrelreserve.gamehubber.MemoryMatchFragment"
+        android:label="Memory Match">
+        <argument android:name="difficulty" app:argType="string" android:defaultValue="EASY" />
+    </fragment>
+    <fragment android:id="@+id/wordSearchFragment"
+        android:name="com.squirrelreserve.gamehubber.WordSearchFragment"
+        android:label="Word Search">
+        <argument android:name="difficulty" app:argType="string" android:defaultValue="EASY" />
+    </fragment>
+</navigation>
