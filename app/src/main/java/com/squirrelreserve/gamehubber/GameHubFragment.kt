@@ -26,17 +26,8 @@ class GameHubFragment : Fragment(R.layout.fragment_game_hub) {
     private var isLaunching = false
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val toolbar = view.setupToolbar(findNavController())
-        toolbar.inflateMenu(R.menu.menu_game_hub)
-        toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_settings -> {
-                    findNavController().navigate(R.id.action_global_to_settingsFragment)
-                    true
-                }
-                else -> false
-            }
-        }
+        view.setupToolbar(findNavController())
+
 
         val recycler = view.findViewById<RecyclerView>(R.id.gameRecycler)
         recycler.layoutManager = LinearLayoutManager(requireContext())
@@ -77,16 +68,27 @@ class GameHubFragment : Fragment(R.layout.fragment_game_hub) {
     private fun handleGameClick(game: GameInfo){
         viewLifecycleOwner.lifecycleScope.launch {
             val progress = repo.getTodayProgress(game.id)
-            android.util.Log.d("GameHub","progress=$progress")
-            android.util.Log.d("GameHub", "savedState length=${progress?.savedStateJson?.length}")
+            val status = progress?.status?.let { GameStatus.valueOf(it) }?: GameStatus.NOT_STARTED
             val hasSavedState = !progress?.savedStateJson.isNullOrBlank()
-            val isInProgress = progress?.status == GameStatus.IN_PROGRESS.name
-            if(isInProgress && hasSavedState){
-                showResumeDialog(game, progress!!.difficulty)
-            } else {
-                showDifficultyDialog(game)
+            when (status){
+                GameStatus.COMPLETED ->{ showCompletedTodayDialog(game)}
+                GameStatus.IN_PROGRESS ->{
+                    if (hasSavedState) showResumeDialog(game, progress!!.difficulty)
+                    else showDifficultyDialog(game)
+                }
+
+                GameStatus.NOT_STARTED -> {
+                    showDifficultyDialog(game)
+                }
             }
         }
+    }
+    private fun showCompletedTodayDialog(game: GameInfo){
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("${game.title} completed today")
+            .setMessage("You have already completed this game today. Come back tomorrow for more fun")
+            .setPositiveButton("OK", null)
+            .show()
     }
     private fun showDifficultyDialog(game: GameInfo) {
         val options = arrayOf("Easy", "Medium", "Hard")

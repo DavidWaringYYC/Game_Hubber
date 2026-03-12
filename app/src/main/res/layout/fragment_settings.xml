@@ -51,6 +51,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Use dynamic color "/>
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset Progress"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:paddingBottom="8dp"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResetToday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset today's games progress"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResetAllGames"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset all games progress"/>
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

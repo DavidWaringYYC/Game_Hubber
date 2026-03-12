@@ -79,4 +79,10 @@ class GameProgressRepository (context: Context){
         val today = DateKey.today()
         return dao.getProgress(gameId, today)?.savedStateJson
     }
+    suspend fun resetToday(){
+        dao.deleteForDate(DateKey.today())
+    }
+    suspend fun resetAllGameData(){
+        dao.deleteAll()
+    }
 }

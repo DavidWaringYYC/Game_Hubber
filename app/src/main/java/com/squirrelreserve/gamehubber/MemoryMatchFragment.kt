@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -41,19 +43,7 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
         val difficulty = Difficulty.valueOf(args.difficulty)
         val rows = BoardConfig.rowsFor(difficulty)
         val cols = BoardConfig.COLS
-
-        val toolbar = view.setupToolbar(findNavController())
-        toolbar.inflateMenu(R.menu.menu_game_hub)
-        toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_settings -> {
-                    findNavController().navigate(R.id.action_global_to_settingsFragment)
-                    true
-                }
-                else -> false
-            }
-        }
-
+        view.setupToolbar(findNavController())
         val rv = view.findViewById<RecyclerView>(R.id.rvGrid)
         rv.layoutManager = GridLayoutManager(requireContext(), cols)
         adapter = MemoryCardAdapter{ index -> onCardTapped(index)}
@@ -74,6 +64,15 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
 
 
         viewLifecycleOwner.lifecycleScope.launch {
+            val progress = repo.getTodayProgress("memory_match")
+            if(progress?.status == GameStatus.COMPLETED.name){
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Completed today")
+                    .setMessage("You already completed Memory Match today. Come back tomorrow!")
+                    .setPositiveButton("OK"){_,_-> findNavController().navigateUp()}
+                    .show()
+                return@launch
+            }
             val json = repo.loadState("memory_match")
             if (!json.isNullOrBlank()) {
                 state = JsonProvider.json.decodeFromString<MemoryMatchState>(json)
@@ -165,10 +164,9 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
         }
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Game Completed")
-            .setMessage("Great Job! what would you like to do next?")
+            .setMessage("Great Job! Your are done for today.")
             .setCancelable(false)
             .setPositiveButton("Back to Hub"){ _,_ -> findNavController().navigateUp()}
-            .setNegativeButton("Play Again") {_,_ -> startNewGameSameDifficulty()}
             .show()
     }
     private fun startNewGameSameDifficulty(){

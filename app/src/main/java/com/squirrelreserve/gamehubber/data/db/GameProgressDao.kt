@@ -14,4 +14,8 @@ interface GameProgressDao {
     suspend fun getProgress(gameId: String, dateKey: String): GameProgressEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: GameProgressEntity)
+    @Query("DELETE FROM game_progress WHERE dateKey = :dateKey")
+    suspend fun deleteForDate(dateKey: String)
+    @Query("DELETE FROM game_progress")
+    suspend fun deleteAll()
 }
