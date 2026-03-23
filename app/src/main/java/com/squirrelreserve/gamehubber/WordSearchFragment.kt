@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.squirrelreserve.gamehubber.data.GameProgressRepository
 import com.squirrelreserve.gamehubber.games.wordSearch.FoundLine
 import com.squirrelreserve.gamehubber.games.wordSearch.LocalWordRepository
@@ -90,7 +91,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
 
         // Load/initialize state in ONE place (avoids race conditions)
         viewLifecycleOwner.lifecycleScope.launch {
-            val progress = repo.getTodayProgress("word_search")
+            val progress = repo.getTodayProgress(GameIds.WORD_SEARCH)
             if (progress?.status == GameStatus.COMPLETED.name) {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Completed today")
@@ -103,7 +104,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
             }
 
             // Load saved state if exists, else new
-            val json = repo.loadState("word_search")
+            val json = repo.loadState(GameIds.WORD_SEARCH)
             state = if (!json.isNullOrBlank()) {
                 JsonProvider.json.decodeFromString(WordSearchState.serializer(), json)
             } else {
@@ -123,14 +124,28 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
     }
 
     private suspend fun createNewGameState(difficulty: Difficulty): WordSearchState {
-        val words = wordRepo.getWords(difficulty)
-        val seed = System.currentTimeMillis()
-        val grid = WordSearchGenerator.generate(8, 8, words, seed)
-        return WordSearchState(
-            difficulty = difficulty.name,
-            grid = grid,
-            words = words
-        )
+        val baseWords = wordRepo.getWords(difficulty)
+        val rows = 8
+        val cols = 8
+        repeat(10){ attempt ->
+            val shuffledWords = baseWords.shuffled(Random(System.nanoTime()))
+            try{
+                val grid = WordSearchGenerator.generate(rows = rows, cols = cols, words = shuffledWords, seed = System.nanoTime())
+                return WordSearchState(difficulty = difficulty.name, grid = grid, words = shuffledWords)
+            } catch (e: IllegalStateException){
+                //try again
+            }
+        }
+        return createFallBackGameState(difficulty, baseWords)
+    }
+
+    private suspend fun createFallBackGameState(
+        difficulty: Difficulty,
+        words: List<String>
+    ): WordSearchState {
+        val reducedWords = words.shuffled().take(maxOf(5, words.size * 2 /3))
+        val grid = WordSearchGenerator.generate(rows = 8, cols = 8, words = reducedWords, seed = System.nanoTime())
+        return WordSearchState(difficulty = difficulty.name, grid = grid, words = reducedWords)
     }
 
     private fun handleGridTouch(event: MotionEvent, rootView: View) {
@@ -315,18 +330,21 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         timerJob?.cancel()
 
         lifecycleScope.launch {
-            repo.markCompleted("word_search")
-            repo.clearState("word_search")
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Word Search Completed!")
-            .setMessage("Congratulations! You are done for today.")
-            .setCancelable(false)
-            .setPositiveButton("Back to Hub") { _, _ ->
-                if (isAdded) findNavController().navigateUp()
+            val earned = repo.markCompleted(GameIds.WORD_SEARCH)
+            repo.clearState(GameIds.WORD_SEARCH)
+            if (earned > 0) {
+                Snackbar.make(requireView(), "+$earned Tokens earned!", Snackbar.LENGTH_LONG).show()
             }
-            .show()
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Word Search Completed!")
+                .setMessage("Congratulations! You are done for today.")
+                .setCancelable(false)
+                .setPositiveButton("Back to Hub") { _, _ ->
+                    if (isAdded) findNavController().navigateUp()
+                }
+                .show()
+        }
     }
 
     private fun formatTime(ms: Long): String {
@@ -394,7 +412,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         lifecycleScope.launch {
             withContext(NonCancellable) {
                 val json = JsonProvider.json.encodeToString(WordSearchState.serializer(), updated)
-                repo.saveState("word_search", difficulty, json)
+                repo.saveState(GameIds.WORD_SEARCH, difficulty, json)
             }
         }
     }

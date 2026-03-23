@@ -2,8 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_tokens"
+        android:title="Token"
+        app:showAsAction="always"
+        app:actionLayout="@layout/view_toolbar_tokens" />
+    <item
         android:id="@+id/action_settings"
         android:title="Settings"
         android:icon="@drawable/ic_settings"
         app:showAsAction="always"/>
+
 </menu>

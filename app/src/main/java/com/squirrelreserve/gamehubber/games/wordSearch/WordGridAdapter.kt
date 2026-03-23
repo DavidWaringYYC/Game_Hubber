@@ -1,10 +1,11 @@
 package com.squirrelreserve.gamehubber.games.wordSearch
 
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
 import com.squirrelreserve.gamehubber.R
 
@@ -35,34 +36,38 @@ class WordGridAdapter : RecyclerView.Adapter<WordGridAdapter.VH>() {
     override fun getItemCount() = rows * cols
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_word_cell, parent, false)
-        return VH(view as MaterialCardView)
+        val size = parent.measuredWidth / cols
+        view.layoutParams = view.layoutParams.apply { height = size }
+        return VH(view)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
+        if(position == 0){
+            Log.d("WS","Grid length= ${grid.length}")
+        }
         val ch = grid.getOrNull(position) ?: ' '
         holder.bind(ch, position, foundColors[position], dragPath.contains(position), dragColor)
     }
-    class VH(private val root: MaterialCardView) : RecyclerView.ViewHolder(root){
+    class VH(private val root: View) : RecyclerView.ViewHolder(root){
         private val tv: TextView = root.findViewById(R.id.tvLetter)
         fun bind(letter: Char, index: Int, foundColor: Int?,isDragging: Boolean, dragColor: Int?){
             tv.text = letter.toString()
-            val ctx = root.context
-            val surface = MaterialColors.getColor(root, com.google.android.material.R.attr.colorSurface)
-            val outline = MaterialColors.getColor(root, com.google.android.material.R.attr.colorOutline)
-            root.strokeColor = outline
-            root.strokeWidth = 1
+            val surface = MaterialColors.getColor(root, com.google.android.material.R.attr.colorSurfaceContainer)
+            val onSurface = MaterialColors.getColor(root, com.google.android.material.R.attr.colorOnSurface)
+            val onPrimary = MaterialColors.getColor(root, com.google.android.material.R.attr.colorOnPrimary)
             when {
                 foundColor != null ->{
-                    root.setCardBackgroundColor(foundColor)
-                    tv.setTextColor(MaterialColors.getColor(root, com.google.android.material.R.attr.colorOnPrimary))
+                    root.setBackgroundColor(foundColor)
+                    tv.setTextColor(onPrimary)
                 }
                 isDragging && dragColor != null ->{
-                    root.setCardBackgroundColor(dragColor)
-                    tv.setTextColor(MaterialColors.getColor(root, com.google.android.material.R.attr.colorOnPrimary))
+                    root.setBackgroundColor(dragColor)
+                    tv.setTextColor(onPrimary)
                 }
                 else -> {
-                    root.setCardBackgroundColor(surface)
-                    tv.setTextColor(MaterialColors.getColor(root, com.google.android.material.R.attr.colorOnSurface))
+                    root.setBackgroundColor(surface)
+                    //root.setBackgroundColor(0x22FF00FF.toInt())
+                    tv.setTextColor(onSurface)
                 }
             }
         }

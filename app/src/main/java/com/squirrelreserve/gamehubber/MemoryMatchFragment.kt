@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.squirrelreserve.gamehubber.data.GameProgressRepository
 import com.squirrelreserve.gamehubber.games.memory.BoardConfig
 import com.squirrelreserve.gamehubber.games.memory.MemoryCardAdapter
@@ -64,7 +65,7 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
 
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val progress = repo.getTodayProgress("memory_match")
+            val progress = repo.getTodayProgress(GameIds.MEMORY_MATCH)
             if(progress?.status == GameStatus.COMPLETED.name){
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Completed today")
@@ -73,19 +74,12 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
                     .show()
                 return@launch
             }
-            val json = repo.loadState("memory_match")
+            val json = repo.loadState(GameIds.MEMORY_MATCH)
             if (!json.isNullOrBlank()) {
                 state = JsonProvider.json.decodeFromString<MemoryMatchState>(json)
                 render(view)
             }
         }
-       view.findViewById<MaterialButton>(R.id.btnComplete).setOnClickListener {
-           lifecycleScope.launch {
-               repo.markCompleted("memory_match")
-               val navController = findNavController()
-               navController.navigateUp()
-           }
-       }
     }
 
     override fun onStop() {
@@ -96,7 +90,7 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
         lifecycleScope.launch {
             withContext(NonCancellable) {
                 val json = JsonProvider.json.encodeToString(currentState)
-                repo.saveState("memory_match", difficulty, json)
+                repo.saveState(GameIds.MEMORY_MATCH, difficulty, json)
             }
         }
     }
@@ -159,15 +153,19 @@ class MemoryMatchFragment : Fragment(R.layout.fragment_memory_match) {
         completedHandled = true
         lockInput = true
         lifecycleScope.launch {
-            repo.markCompleted("memory_match")
-            repo.clearState("memory_match")
+            val earned = repo.markCompleted(GameIds.MEMORY_MATCH)
+            repo.clearState(GameIds.MEMORY_MATCH)
+            if (earned > 0) {
+                Snackbar.make(requireView(), "+$earned Tokens earned!", Snackbar.LENGTH_LONG).show()
+            }
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Game Completed")
+                .setMessage("Great Job! Your are done for today.")
+                .setCancelable(false)
+                .setPositiveButton("Back to Hub") { _, _ -> findNavController().navigateUp() }
+                .show()
         }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Game Completed")
-            .setMessage("Great Job! Your are done for today.")
-            .setCancelable(false)
-            .setPositiveButton("Back to Hub"){ _,_ -> findNavController().navigateUp()}
-            .show()
     }
     private fun startNewGameSameDifficulty(){
         val view = requireView()
