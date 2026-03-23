@@ -1,17 +1,15 @@
 package com.squirrelreserve.gamehubber
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.squirrelreserve.gamehubber.data.GameProgressRepository
@@ -37,14 +35,14 @@ class GameHubFragment : Fragment(R.layout.fragment_game_hub) {
         recycler.adapter = adapter
         val baseGames = listOf(
             GameInfo(
-                id = "memory_match",
+                id = GameIds.MEMORY_MATCH,
                 title = "Memory Match",
                 description = "Find and match all pairs.",
                 iconRes = R.drawable.ic_memory,
                 status = GameStatus.NOT_STARTED
             ),
             GameInfo(
-                id = "word_search",
+                id = GameIds.WORD_SEARCH,
                 title = "Word Search",
                 description = "Find hidden words in the grid.",
                 iconRes = R.drawable.ic_word_search,
@@ -130,15 +128,15 @@ class GameHubFragment : Fragment(R.layout.fragment_game_hub) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 repo.markInProgress(game.id, difficulty)
-
+Log.d("HMMM",game.id)
                 when (game.id) {
-                    "memory_match" -> {
+                    GameIds.MEMORY_MATCH -> {
                         val action = GameHubFragmentDirections
                             .actionGameHubToMemoryMatch(difficulty.name)
                         navController.navigate(action)
                     }
 
-                    "word_search" -> {
+                    GameIds.WORD_SEARCH -> {
                         val action = GameHubFragmentDirections
                             .actionGameHubToWordSearch(difficulty.name)
                         navController.navigate(action)

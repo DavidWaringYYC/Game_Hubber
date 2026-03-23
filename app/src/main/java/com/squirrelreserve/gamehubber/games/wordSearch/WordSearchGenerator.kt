@@ -1,7 +1,6 @@
 package com.squirrelreserve.gamehubber.games.wordSearch
 
 import kotlin.random.Random
-import kotlin.random.nextInt
 
 object WordSearchGenerator {
     private val directions = listOf(

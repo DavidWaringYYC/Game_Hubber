@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.chip.Chip
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/chipTokens"
+    style="@style/Widget.Material3.Chip.Assist"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="0"
+    android:clickable="false"
+    android:focusable="false"
+    android:minHeight="32dp"
+    android:minWidth="56dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    app:chipIconEnabled="true"
+    app:iconStartPadding="4dp"
+    app:textStartPadding="4dp"
+    app:textEndPadding="4dp"
+    />

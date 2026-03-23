@@ -7,14 +7,11 @@ import android.widget.RadioGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.squirrelreserve.gamehubber.data.GameProgressRepository
+import com.squirrelreserve.gamehubber.ui.setupToolbar
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -28,10 +25,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         store = SettingsStore(requireContext().applicationContext)
-        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
-        val navController = findNavController()
-        val appBarConfiguration = AppBarConfiguration(setOf(R.id.gameHubFragment))
-        toolbar.setupWithNavController(navController, appBarConfiguration)
+        view.setupToolbar(findNavController())
 
         val group = view.findViewById<RadioGroup>(R.id.themeRadioGroup)
         val radioSystem = view.findViewById<RadioButton>(R.id.radioSystem)
