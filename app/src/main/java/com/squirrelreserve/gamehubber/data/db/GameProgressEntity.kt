@@ -13,29 +13,37 @@ data class GameProgressEntity(
     val dateKey: String,
     val status: String,
     val difficulty: String,
-    val rewardClaimed: Boolean = false,
-    val extraPlaysAvailable: Int = 0,
     val savedStateJson: String?,
-    val updatedAt: Long = System.currentTimeMillis()
-)
-@Entity(
-    tableName = "wallet"
-)
-data class  WalletEntity(
-    @PrimaryKey val userId: String = "local",
-    val balance: Long = 0L,
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long
 )
 @Entity(
     tableName = "token_txn"
 )
 data class TokenTxnEntity(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    @PrimaryKey
+    val id: String = UUID.randomUUID().toString(),
     val userId: String = "local",
-    val type: String,
-    val reason: String,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val type: TxnType,
+    val reason: TxnReason,
     val amount: Long,
     val gameId: String? = null,
-    val dateKey: String? = null,
+    val dateKey: String? = null
+)
+@Entity(tableName = "wallet")
+data class WalletEntity(
+    @PrimaryKey
+    val userId: String = "local",
+    val balance: Long = 0L,
     val updatedAt: Long = System.currentTimeMillis()
 )
+enum class TxnType {
+    EARN,
+    SPEND
+}
+enum class TxnReason{
+    COMPLETE_DAILY,
+    REPLAY_GAME,
+    HINT_WORDSEARCH,
+    HINT_MEMORY_MATCH
+}

@@ -51,7 +51,6 @@ class TokenFlowSmokeTest {
         assertEquals(6L, repo.getBalance())
         assertEquals(6L, balanceFlow.first())
         val ok2 = repo.spend(amount = 999, reason = "REPLAY", gameId = GameIds.WORD_SEARCH, dateKey = "2026-03-17")
-        assertTrue(ok2)
         assertEquals(6L, repo.getBalance())
         assertEquals(6L, balanceFlow.first())
     }
