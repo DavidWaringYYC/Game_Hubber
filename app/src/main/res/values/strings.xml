@@ -7,6 +7,6 @@
     <string name="plusTen">+10</string>
     <string name="complete_daily">COMPLETE_DAILY</string>
     <string name="TimeExample">11:07</string>
-    <string name="meteTextExample">memory_match + 2026-03-13</string>
+    <string name="meteTextExample">memory_match + 2026–03-13</string>
     <string name="no_transactions_yet">No Transactions yet</string>
 </resources>
