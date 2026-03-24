@@ -13,6 +13,8 @@ data class GameProgressEntity(
     val dateKey: String,
     val status: String,
     val difficulty: String,
+    val rewardClaimed: Boolean = false,
+    val extraPlaysAvailable: Int = 0,
     val savedStateJson: String?,
     val updatedAt: Long
 )

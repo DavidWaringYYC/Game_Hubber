@@ -3,12 +3,15 @@ package com.squirrelreserve.gamehubber.data
 import android.content.Context
 import androidx.room.withTransaction
 import com.squirrelreserve.gamehubber.Difficulty
-import com.squirrelreserve.gamehubber.GameIds
 import com.squirrelreserve.gamehubber.GameStatus
 import com.squirrelreserve.gamehubber.data.db.AppDatabase
 import com.squirrelreserve.gamehubber.data.db.GameProgressEntity
 import com.squirrelreserve.gamehubber.data.db.TokenTxnEntity
+import com.squirrelreserve.gamehubber.data.db.TxnReason
+import com.squirrelreserve.gamehubber.data.db.TxnType
 import com.squirrelreserve.gamehubber.data.db.WalletEntity
+import com.squirrelreserve.gamehubber.tokens.TokenCatalog
+import com.squirrelreserve.gamehubber.tokens.TokenEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -50,43 +53,42 @@ class GameProgressRepository (context: Context){
         var earned = 0L
         db.withTransaction {
             val current = progressDao.getProgress(gameId, today)
-            val difficulty = current?.difficulty ?: Difficulty.EASY.name
+            val difficulty = Difficulty.valueOf(current?.difficulty ?: Difficulty.EASY.name)
             val alreadyClaimed = current?.rewardClaimed ?: false
-            val rewardTokens = when (gameId) {
-                GameIds.MEMORY_MATCH -> 10L
-                else -> 0L
-            }
-            if (!alreadyClaimed && rewardTokens > 0L) {
-                earned = rewardTokens
+            if (!alreadyClaimed) {
+                val rule = TokenCatalog.earnFor(TokenEvent.CompletedDaily(gameId, difficulty))
+                if (rule != null && rule.amount > 0L) {
+                    earned = rule.amount
 
-                val wallet = walletDao.getWallet() ?: WalletEntity(balance = 0L)
-                val newBalance = wallet.balance + rewardTokens
-                walletDao.upsertWallet(
-                    wallet.copy(
-                        balance = newBalance,
-                        updatedAt = now
+                    val wallet = walletDao.getWallet() ?: WalletEntity(balance = 0L)
+                    val newBalance = wallet.balance + earned
+                    walletDao.upsertWallet(
+                        wallet.copy(
+                            balance = newBalance,
+                            updatedAt = now
+                        )
                     )
-                )
-                txnDao.insertTxn(
-                    TokenTxnEntity(
-                        type = "EARN",
-                        reason = "COMPLETE_DAILY",
-                        amount = rewardTokens,
-                        gameId = gameId,
-                        dateKey = today
+                    txnDao.insertTxn(
+                        TokenTxnEntity(
+                            type = TxnType.EARN,
+                            reason = TxnReason.COMPLETE_DAILY,
+                            amount = earned,
+                            gameId = gameId,
+                            dateKey = today,
+                            updatedAt = now
+                        )
                     )
-                )
+                }
             }
-            val newRewardClaimed = alreadyClaimed || earned > 0L
             progressDao.upsert(
                 GameProgressEntity(
                     gameId = gameId,
                     dateKey = today,
                     status = GameStatus.COMPLETED.name,
-                    difficulty = difficulty,
-                    savedStateJson = null,
-                    rewardClaimed = newRewardClaimed,
+                    difficulty = difficulty.name,
+                    rewardClaimed = alreadyClaimed || earned > 0L,
                     extraPlaysAvailable = current?.extraPlaysAvailable ?: 0,
+                    savedStateJson = null,
                     updatedAt = now
                 )
             )
@@ -134,12 +136,13 @@ class GameProgressRepository (context: Context){
         progressDao.deleteAll()
     }
     suspend fun buyReplayForToday(
-        progress: GameProgressEntity,
-        cost: Long = 25L
+        progress: GameProgressEntity
     ): Boolean {
+        val rule = TokenCatalog.costFor(TokenEvent.ReplayPurchased(progress.gameId)) ?: return false
+        val costAbs = -rule.amount
         val ok = tokenRepo.spend(
-            amount = cost,
-            reason = "REPLAY",
+            amount = costAbs,
+            reason = TxnReason.REPLAY_GAME,
             gameId = progress.gameId,
             dateKey = progress.dateKey
         )

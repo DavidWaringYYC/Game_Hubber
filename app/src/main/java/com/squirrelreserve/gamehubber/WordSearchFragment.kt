@@ -136,16 +136,32 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
                 //try again
             }
         }
-        return createFallBackGameState(difficulty, baseWords)
+        return createFallBackGameState(difficulty, baseWords, rows, cols)
     }
 
     private suspend fun createFallBackGameState(
         difficulty: Difficulty,
-        words: List<String>
+        words: List<String>,
+        rows: Int = 8,
+        cols: Int = 8
     ): WordSearchState {
-        val reducedWords = words.shuffled().take(maxOf(5, words.size * 2 /3))
-        val grid = WordSearchGenerator.generate(rows = 8, cols = 8, words = reducedWords, seed = System.nanoTime())
-        return WordSearchState(difficulty = difficulty.name, grid = grid, words = reducedWords)
+        val reducedWords = words
+            .shuffled(Random(System.nanoTime()))
+            .take(maxOf(5, words.size * 2 /3))
+        repeat(10){attempt ->
+            val seed = System.nanoTime()
+            try{
+                val grid = WordSearchGenerator.generate(rows, cols, reducedWords, seed)
+                return WordSearchState(
+                    difficulty = difficulty.name,
+                    grid = grid,
+                    words = reducedWords
+                )
+            } catch (_: IllegalStateException){
+                //try again
+            }
+        }
+        throw IllegalStateException("Word Search generation failed after retries (even with reduced words).")
     }
 
     private fun handleGridTouch(event: MotionEvent, rootView: View) {
@@ -302,9 +318,9 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
 
     private fun render(view: View) {
         val s = state ?: return
-        view.findViewById<TextView>(R.id.tvTimer).text =
-            "Time: ${formatTime(s.elapsedMs + currentSessionMs())}"
-
+        val txtTimer = "Time: ${formatTime(s.elapsedMs + currentSessionMs())}"
+        view.findViewById<TextView>(R.id.tvTimer).text = txtTimer
+            
         // Grid still renders letters, but no longer uses cellColors for highlighting
         gridAdapter.submit(s.rows, s.cols, s.grid, emptyMap(), emptySet(), null)
 
@@ -416,4 +432,5 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
             }
         }
     }
+
 }

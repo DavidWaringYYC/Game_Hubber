@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/gameHubFragment">
     <action android:id="@+id/action_global_to_settingsFragment" app:destination="@+id/settingsFragment"/>
@@ -24,4 +25,9 @@
         android:label="Word Search">
         <argument android:name="difficulty" app:argType="string" android:defaultValue="EASY" />
     </fragment>
+    <fragment android:id="@+id/tokenTransactionsFragment"
+        android:name="com.squirrelreserve.gamehubber.TokenTransactionsFragment"
+        android:label="Transactions"
+        tools:layout="@layout/fragment_token_transactions" />
+    <action android:id="@+id/action_global_to_tokenTransactionsFragment" app:destination="@id/tokenTransactionsFragment"/>
 </navigation>

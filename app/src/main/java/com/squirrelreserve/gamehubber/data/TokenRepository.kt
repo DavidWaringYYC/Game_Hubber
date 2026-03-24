@@ -4,6 +4,8 @@ import androidx.room.withTransaction
 import com.squirrelreserve.gamehubber.data.db.AppDatabase
 import com.squirrelreserve.gamehubber.data.db.TokenTxnDao
 import com.squirrelreserve.gamehubber.data.db.TokenTxnEntity
+import com.squirrelreserve.gamehubber.data.db.TxnReason
+import com.squirrelreserve.gamehubber.data.db.TxnType
 import com.squirrelreserve.gamehubber.data.db.WalletDao
 import com.squirrelreserve.gamehubber.data.db.WalletEntity
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +19,7 @@ class TokenRepository (
     suspend fun getBalance(): Long = walletDao.getWallet()?.balance ?: 0L
     suspend fun earn(
         amount: Long,
-        reason: String,
+        reason: TxnReason,
         gameId: String? = null,
         dateKey: String? = null
     ){
@@ -28,7 +30,7 @@ class TokenRepository (
             walletDao.upsertWallet(wallet.copy(balance = newBalance, updatedAt = System.currentTimeMillis()))
             txnDao.insertTxn(
                 TokenTxnEntity(
-                    type = "EARN",
+                    type = TxnType.EARN,
                     reason = reason,
                     amount = amount,
                     gameId = gameId,
@@ -39,7 +41,7 @@ class TokenRepository (
     }
     suspend fun spend(
         amount: Long,
-        reason: String,
+        reason: TxnReason,
         gameId: String? = null,
         dateKey: String? = null
     ): Boolean{
@@ -51,7 +53,7 @@ class TokenRepository (
             walletDao.upsertWallet(wallet.copy(balance = newBalance, updatedAt = System.currentTimeMillis()))
             txnDao.insertTxn(
                 TokenTxnEntity(
-                    type = "SPEND",
+                    type = TxnType.SPEND,
                     reason = reason,
                     amount = -amount,
                     gameId = gameId,
