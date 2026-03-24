@@ -110,6 +110,10 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
             } else {
                 createNewGameState(difficulty)
             }
+            if(state == null){
+                showGenerationFailedDialog()
+                return@launch
+            }
 
             sessionStartRealTime = SystemClock.elapsedRealtime()
             render(view)
@@ -123,7 +127,34 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         }
     }
 
-    private suspend fun createNewGameState(difficulty: Difficulty): WordSearchState {
+    private fun showGenerationFailedDialog() {
+        if(!isAdded) return
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Something went wrong")
+            .setMessage("We could not generate today's word search. \nPlease try again.")
+            .setCancelable(false)
+            .setPositiveButton("Try Again"){_,_-> recreateGame()}
+            .setNegativeButton("Back"){_,_->findNavController().navigateUp()}
+            .show()
+    }
+
+    private fun recreateGame() {
+        val difficulty = Difficulty.valueOf(args.difficulty)
+        viewLifecycleOwner.lifecycleScope.launch {
+            state = createNewGameState(difficulty)
+            if(state == null){
+                Snackbar.make(requireView(),"Still unable to create a puzzle. Please try later",
+                    Snackbar.LENGTH_LONG).show()
+                return@launch
+            }
+            sessionStartRealTime = SystemClock.elapsedRealtime()
+            render(requireView())
+            rvGrid.post{rebuildOverlayFromState()}
+            startTimer(requireView())
+        }
+    }
+
+    private suspend fun createNewGameState(difficulty: Difficulty): WordSearchState? {
         val baseWords = wordRepo.getWords(difficulty)
         val rows = 8
         val cols = 8
@@ -144,7 +175,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         words: List<String>,
         rows: Int = 8,
         cols: Int = 8
-    ): WordSearchState {
+    ): WordSearchState? {
         val reducedWords = words
             .shuffled(Random(System.nanoTime()))
             .take(maxOf(5, words.size * 2 /3))
@@ -161,7 +192,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
                 //try again
             }
         }
-        throw IllegalStateException("Word Search generation failed after retries (even with reduced words).")
+        return null
     }
 
     private fun handleGridTouch(event: MotionEvent, rootView: View) {
@@ -320,7 +351,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         val s = state ?: return
         val txtTimer = "Time: ${formatTime(s.elapsedMs + currentSessionMs())}"
         view.findViewById<TextView>(R.id.tvTimer).text = txtTimer
-            
+
         // Grid still renders letters, but no longer uses cellColors for highlighting
         gridAdapter.submit(s.rows, s.cols, s.grid, emptyMap(), emptySet(), null)
 
