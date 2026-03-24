@@ -320,7 +320,7 @@ class WordSearchFragment : Fragment(R.layout.fragment_word_search) {
         val s = state ?: return
         val txtTimer = "Time: ${formatTime(s.elapsedMs + currentSessionMs())}"
         view.findViewById<TextView>(R.id.tvTimer).text = txtTimer
-            
+
         // Grid still renders letters, but no longer uses cellColors for highlighting
         gridAdapter.submit(s.rows, s.cols, s.grid, emptyMap(), emptySet(), null)
 
